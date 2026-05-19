@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('tagline')->nullable();
             $table->text('bio')->nullable();
-            $table->straing('location')->nullable();
+            $table->string('location')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->string('github')->nullable();

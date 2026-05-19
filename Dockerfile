@@ -15,8 +15,9 @@ RUN composer run-script post-autoload-dump --no-interaction 2>/dev/null || true
 # ── Production image ───────────────────────────────────────────
 FROM php:8.3-fpm-alpine
 
-RUN apk add --no-cache nginx supervisor libpq \
-    && docker-php-ext-install pdo pdo_pgsql opcache
+RUN apk add --no-cache nginx supervisor libpq postgresql-dev \
+    && docker-php-ext-install pdo pdo_pgsql opcache \
+    && apk del postgresql-dev
 
 WORKDIR /app
 COPY --from=builder /app .
