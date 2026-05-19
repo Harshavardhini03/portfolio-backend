@@ -1,0 +1,43 @@
+name: Deploy Laravel API to Render.com
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-deploy:
+    name: Test & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_pgsql, mbstring, openssl, fileinfo, curl
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+      - name: Copy .env for CI
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run PHP syntax check
+        run: find app routes database -name "*.php" | xargs php -l
+
+      - name: Trigger Render deploy (on push to main only)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          echo "Render deploy triggered"
+
+# ── Required GitHub Secrets ────────────────────────────────────
+# RENDER_DEPLOY_HOOK_URL  → From Render dashboard → your service → Settings → Deploy Hook
