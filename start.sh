@@ -3,18 +3,25 @@ set -e
 
 echo "=== Running Laravel setup ==="
 
-# Run migrations and seed database
-php artisan migrate --force --seed
+# Fix permissions first
+chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
-# Clear and cache config for production
+# Clear any cached config to ensure fresh env vars are used
+php artisan config:clear
+php artisan cache:clear
+
+# Run migrations (--force skips the production prompt)
+echo "Running migrations..."
+php artisan migrate --force
+
+# Seed only if tables are empty (safe to run on every deploy)
+echo "Seeding database..."
+php artisan db:seed --force
+
+# Cache config AFTER migrations succeed
 php artisan config:cache
 php artisan route:cache
-php artisan view:cache
-
-# Fix permissions
-chmod -R 775 storage bootstrap/cache
 
 echo "=== Starting server ==="
 
-# Start supervisor (nginx + php-fpm)
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
